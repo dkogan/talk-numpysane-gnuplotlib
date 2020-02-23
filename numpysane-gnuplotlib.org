@@ -17,9 +17,9 @@ Two libraries to make working in numpy nicer.
 - Python2 and Python3 both supported
 
 ** numpysane (https://github.com/dkogan/numpysane)
-- Broadcasting support
 - Nicer array manipulation
 - Nicer basic linear algebra routines
+- Broadcasting support
 
 ** gnuplotlib (https://github.com/dkogan/gnuplotlib)
 - Plotting
@@ -45,8 +45,8 @@ Two libraries to make working in numpy nicer.
 Areas addressed by =numpysane=:
 
 - Nicer array manipulation
-- Broadcasting support
 - Nicer basic linear algebra routines
+- Broadcasting support
 
 ** notes                                                           :noexport:
 
@@ -63,7 +63,7 @@ only has 2-dimensional arrays.
 I'll briefly describe the issues and solutions. More is available in the
 documentation
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 Very easy example: stick two identical 2D arrays together
 
 - The docs say to use =hstack()= or =vstack()= or =dstack()=
@@ -80,7 +80,7 @@ Very easy example: stick two identical 2D arrays together
 (3, 2)
 #+END_EXAMPLE
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 What do we expect =hstack(arr32,arr32)= to do?
 
 #+BEGIN_EXAMPLE
@@ -106,7 +106,7 @@ N-dimensional arrays, these words have limited meaning, but that's what numpy
 does. And what if you want the 4th dimension? I'm convinced that nobody knows
 how to use these functions. Let's try
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 This was a trick question. Here's what it does:
 
 #+BEGIN_EXAMPLE
@@ -120,7 +120,7 @@ TypeError: hstack() takes 1 positional argument ...
 Apparently =hstack()= wants an iterable of the arguments, instead of the
 arguments themselves
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 Fine. Here's what it does if you feed it what it wants:
 
 #+BEGIN_EXAMPLE
@@ -132,7 +132,7 @@ Fine. Here's what it does if you feed it what it wants:
 
 Whew. That makes sense! Looks "horizontal".
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 What if I don't feed it strictly 2D matrices?
 
 #+BEGIN_EXAMPLE
@@ -146,7 +146,7 @@ What if I don't feed it strictly 2D matrices?
 (1, 3, 2)
 #+END_EXAMPLE
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 Same question as before: what do we expect =hstack((arr132,arr132))= to do?
 
 #+BEGIN_EXAMPLE
@@ -168,7 +168,7 @@ or
 
 or something else?
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 Here's what it does:
 
 #+BEGIN_EXAMPLE
@@ -187,7 +187,7 @@ Here's what it does:
 Whoa. That is /not/ horizontal at all! I would have expected a result with shape
 =(1,3,4)=
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 What if I give it 1-dimensional arrays?
 
 #+BEGIN_EXAMPLE
@@ -206,7 +206,7 @@ What if I give it 1-dimensional arrays?
 (1, 3)
 #+END_EXAMPLE
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 #+BEGIN_EXAMPLE
 >>> np.hstack((arr3,arr3)).shape
 (6,)
@@ -228,19 +228,20 @@ hstack([[0 1 2]],   [0 1 2])
 I claim it /should/ be able to do this, and will justify it later. And other
 functions such as =vstack()= do accept arrays with uneven input dimensions.
 
-* What's wrong with numpy: matrix concatenation
+* Matrix concatenation
 So what's wrong?
 
 - *numpy is inconsistent about which is the most significant dimension in an
   array*
 
-- If I want to stack =N= arrays of shape =(A,B,C)= into a new array, do I get an
-  array of shape =(N,A,B,C)= or =(A,B,C,N)=?
+- There's an arbitrary design choice that must be made: if I stack =N= arrays of
+  shape =(A,B,C)= into a new array, do I get an array of shape =(N,A,B,C)= or
+  =(A,B,C,N)=?
 
 - Most of numpy makes the /first/ choice, but some of it (concatenation
   functions most notably) makes the second choice
 
-* What's wrong with numpy: dimensionality example
+* Dimensionality example
 Example:
 
 - Let's say I have a 1-dimensional array containing simultaneous temperature
@@ -251,7 +252,7 @@ Example:
 [ t_place0 t_place1 t_place2 ... ]
 
 >>> print(temperatures.shape)
-(Ntemperatures,)
+(Nlocations,)
 
 #+END_EXAMPLE
 
@@ -259,9 +260,9 @@ To access temperatures at different locations in this array, I look along the
 first dimension (=axis = 0=). This is a 1-dimensional array, so that's also the
 last dimension (=axis = -1=).
 
-* What's wrong with numpy: dimensionality example
-Let's say I have measured the temperatures multiple times throughout the day,
-and I make a joint array using the /first/ convention above
+* Dimensionality example
+Let's now say I have measured all the temperatures multiple times throughout the
+day, and I make a joint array using the /first/ convention above
 
 #+BEGIN_EXAMPLE
 >>> print(temperatures)
@@ -270,12 +271,12 @@ and I make a joint array using the /first/ convention above
  ...]
 
 >>> print(temperatures.shape)
-(Ntimes, Ntemperatures)
+(Ntimes, Nlocations)
 #+END_EXAMPLE
 
-- I want to use the same axis index to access differet locations
+- I want to use the same axis index to access different locations
 - If I count dimensions from the end, I can do that: =axis = -1= refers to the
-  different locations here and before
+  different locations in both cases
 - But if I count dimensions from the front, this doesn't work: locations /were/
   at =axis = 0= but now they're at =axis = 1=
 
@@ -290,9 +291,10 @@ this: =axis = -1= refers to the different locations here and before.
 But if I count dimensions from the front, this doesn't work: locations /were/ at
 =axis = 0= but now they're at =axis = 1=.
 
-* What's wrong with numpy: dimensionality example
+* Dimensionality example
 If I used the /second/ convention above to produce an array of shape
-=(Ntemperatures, Ntimes)= then the arrays would be printed differently:
+=(Nlocations, Ntimes)= then the locations are at =axis = 0= in both cases. /But/
+the arrays would be printed differently:
 
 - the location axis would be printed horizontally in the 1D array, and
   vertically in the 2D array
@@ -363,26 +365,26 @@ Nothing is "horizontal" or "vertical". axes should be given from the end
 (2, 1, 3, 2)
 #+END_EXAMPLE
 
-* What's wrong with numpy: matrix multiplication
+* Matrix multiplication
 The funny business extends to other core areas of numpy. For instance
 multiplying matrices is non-trivial
 
-- Up until numpy 1.10 =np.dot()= was the function for that, and it is surprising
-  in all sorts of ways
-- In 1.10 we got =np.matmul=, which is much better, but even then it has strange
-  corners:
+- Up until numpy 1.10.0 =np.dot()= was the function for that, and it is
+  surprising in all sorts of ways
+- In 1.10.0 we got =np.matmul=, which is /much/ better, but even then it has
+  strange corners. Trying to compute an outer product:
 
 #+BEGIN_EXAMPLE
 >>> a = np.arange(5).reshape(5,1)
 >>> b = np.arange(3)
 
->>> np.matmul(a,b) # compute an outer product
-ValueError: matmul: Input operand 1 has a mismatch in its core
-   dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?)
-   (size 3 is different from 1)
+>>> np.matmul(a,b)
+ValueError: matmul: Input operand 1 has a mismatch in
+   its core dimension 0, with gufunc signature
+   (n?,k),(k,m?)->(n?,m?) (size 3 is different from 1)
 #+END_EXAMPLE
 
-* Matrix concatenation with numpysane
+* Matrix multiplication with numpysane
 numpysane provides its own =matmult()= routine that does what one expects:
 
 #+BEGIN_EXAMPLE
@@ -395,54 +397,155 @@ There're many more functions in numpysane in this area. Everything's documented,
 and I'd like to move on to...
 
 * Broadcasting
-- Broadcasting is a generic vectorization technique
-- This is described in great detail in the numpy documentation:
-  http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html
-- /Very few/ numpy functions actually have any broadcasting support. So few that
-  there's little community awareness that this exists
-- numpysane provides support to make any function broadcasting-aware, in both
-  Python and in C
+What is broadcasting?
 
-* What is broadcasting?
+- /Broadcasting/ is a generic way to vectorize functions
+- A broadcasting-aware function has a /prototype/: it knows the dimensionality
+  of its inputs and of its outputs
+- When calling a broadcasting-aware function, any extra dimensions in the input
+  are automatically used for vectorization
 
+* Broadcasting: an example
+This is best described with an example: a broadcasting-aware innner product. An
+inner product (also known as a dot product) is a function that
 
+- takes in two identically-sized 1-dimensional arrays
+- outputs a scalar
 
-- Dimensions are aligned at the end of the shape list, and must match the
-  prototype
+If one calls a broadcasting-aware inner product with two arrays of shape (2,3,4)
+as input, it would
 
-- Extra dimensions left over at the front must be consistent for all the
-  input arguments, meaning:
+- compute 6 inner products of length-4 each
+- report the output in an array of shape (2,3)
 
-  - All dimensions of length != 1 must match
-  - Dimensions of length 1 match corresponding dimensions of any length in
-    other arrays
-  - Missing leading dimensions are implicitly set to length 1
+Because =nps.inner()= knows the dimensionality of its inputs and of its outputs,
+it can figure out how to parse the input arrays
 
-- The output(s) have a shape where
-  - The trailing dimensions are whatever the function being broadcasted
-    returns
-  - The leading dimensions come from the extra dimensions in the inputs
+* Broadcasting: an example
+#+BEGIN_EXAMPLE
+>>> a234 = np.arange(2*3*4).reshape(2,3,4)
 
-* everything else                                                  :noexport:
+>>> print(a234)
+[[[ 0  1  2  3]
+  [ 4  5  6  7]
+  [ 8  9 10 11]]
 
-The page is detailed, and sounds very promising. But if you actually try to use
-it, you realize that pretty much nothing in the numpy ecosystem supports
-broadcasting.
+ [[12 13 14 15]
+  [16 17 18 19]
+  [20 21 22 23]]]
 
-This is core in PDL. So I fixed it. broadcast_define(). Show broadcasted inner
-product. Show writing into a slice.
+>>> print(nps.inner(a234,a234))
+[[  14  126  366]
+ [ 734 1230 1854]]
+#+END_EXAMPLE
 
-And some core linear algebra functions are available in nps. They're very
-explicit about the dimensionality of the inputs and outputs, and they support
-broadcasting.
+The values in the output are =inner([0,1,2,3], [0,1,2,3])= and
+=inner([4,5,6,7],[4,5,6,7])= and so on.
 
-inner
-outer
-norm2
-mag
-matmult
+* What about the stock broadcasting support?
+- What stock broadcasting support?
+- More or less, there isn't any
 
+* Broadcasting rules
+In short:
 
+- Line up the shapes of the inputs to their /trailing/ dimensions
+- Match the trailing dimensions with the expected shapes of the inputs
+- Any leading dimensions left over are used for vectorization
+- The extra leading dimensions must be compatible across all the inputs. This
+  means that each leading dimension must either
+  - equal 1
+  - be missing (thus assumed to equal 1)
+  - equal to some positive integer >1, consistent across all arguments
+- The leading dimensions of the inputs determine the shape of the output
+
+* Broadcasting: an example
+Let's write a broadcasting-aware inner product.
+
+#+BEGIN_EXAMPLE
+import numpysane as nps
+@nps.broadcast_define( (('n',), ('n',)), () )
+def inner(a,b):
+    # We could use numpy for this: return a.dot(b)
+    sum = 0.
+    for i in range(len(a)): sum += a[i]*b[i]
+    return sum
+#+END_EXAMPLE
+
+* Broadcasting: an example
+- We wrote a function =inner(a,b)= that computes /one/ inner product. It knows
+  nothing about vectorization
+- And it can assume that =a= and =b= are 1-dimensional arrays of the same length
+- Then we used the =nps.broadcast_define()= decorator to add broadcasting
+  awareness to this function
+- The decorator is told that there are 2 inputs, that have dimensions =('n',)=
+  each. It's the same =n= for both of them, so ...
+- ... the internal =nps.broadcast_define()= machinery will make sure that the
+  /last/ dimension of both inputs matches
+- If we call =inner()= with more than 1-dimensional input, we'll get multiple
+  inner products computed, and an array of output returned
+
+* Broadcasting: an example
+So we can give it two arrays, and get inner products of each corresponding row:
+
+#+BEGIN_EXAMPLE
+>>> a234 = np.arange(2*3*4).reshape(2,3,4)
+
+>>> print(inner(a234,a234).shape)
+(2,3)
+#+END_EXAMPLE
+
+Or we can compute the inner product or each row of one array to some arbitrary
+vector
+
+#+BEGIN_EXAMPLE
+>>> a234 = np.arange(2*3*4).reshape(2,3,4)
+>>> a4   = np.arange(4)
+
+>>> print(inner(a234,a4).shape)
+(2,3)
+#+END_EXAMPLE
+
+* Broadcasting: more involved example
+Let's say we have a function with input prototype
+
+- =( (3,), ('n',3), ('n',), ('m',) )=
+
+given inputs of shape
+
+#+BEGIN_EXAMPLE
+  (1,5,    3)
+  (2,1,  8,3)
+  (        8)
+  (  5,    9)
+#+END_EXAMPLE
+
+The broadcasting logic will set =n = 8= and =m = 9=.
+
+The call will return an output array of shape (2,5, ...), where ... is the shape
+of each output slice.
+
+* Broadcasting: summary
+- This is a very powerful technique. The =nps.broadcast_define()= decorator is
+  written in Python and wraps Python code. With lots of iterations this is
+  /slow/.
+
+- A much faster analogue exists in C: =nps.numpysane_pywrap=. The iteration code
+  and the code for the inner function are all in C, so this is fast. Please see
+  the documentation for more detail.
+
+* Plotting
+Let's switch gears, and talk about plotting.
+
+- As with the numpy core, there's a dominant choice here: matplotlib
+- It's workable, but I don't want a new backend
+- It's slow
+- It has a weird API
+- It's specific to python and numpy
+
+** notes                                                           :noexport:
+As you can imagine, at this point I was getting peeved. Trying to make plots
+didn't help matters at all
 
 Another thing that was very jarring was the plotting situation. Slow. No
 interactivity. Fewer backends. Weird API. NONSTANDARD api. The world is much
@@ -451,6 +554,25 @@ any differently from plots made with any other tool. At this point I've used
 gnuplot for decades, and have been very happy with it. So I ported over the PDL
 plotting library to numpy, using gnuplot as a backend.
 
+* gnuplotlib
+I've used gnuplot for decades, and very much want to keep using it for numpy:
+
+I do a /lot/ of plotting most of it outside of Python, and there's absolutely no
+reason why my Python plots should work any differently from the rest of them.
+
+So I wrote gnuplotlib, a port of the =PDL::Graphics::Gnuplot= library (that I
+also wrote, originally).
+
+* gnuplotlib design choices
+Similar to feedgnuplot: hands-off styling
+
+Easy learning curve
+
+One function to make plots()
+
+argument accumulation can be done in python
+
+** notes                                                           :noexport:
 Similar design choices as with feedgnuplot: the sysmtem is as hands-off as
 possible. Any styling directives are passed on to gnuplot directly.
 
@@ -463,49 +585,82 @@ we can build them up using the language we already have: python. This is in
 contrast to how matplotlib does it, where you make multiple function calls to do
 anything, and thus there's an API to learn.
 
+* gnuplotlib startup                                               :noexport:
 
-To make a plot, just call plot:
-
-import numpy as np
-import numpysane as nps
+#+BEGIN_SRC python :python python3 :results none :session gnuplotlib-talk
+import numpy      as np
+import numpysane  as nps
 import gnuplotlib as gp
-x = np.arange(100)
-gp.plot(x, wait=True)
 
+def output():
+    global output_file
+    return dict(output = output_file,
+                terminal = 'pdfcairo solid color font ",20" size 11in,5in')
+
+#+END_SRC
+
+* gnuplotlib
+
+To plot something, just call plot:
+
+#+BEGIN_SRC python :python python3 :exports both :results file link :session gnuplotlib-talk :file "demo-line600.pdf" :var output_file="demo-line600.pdf"
+x = np.arange(50)
+gp.plot(x, **output())
+#+END_SRC
+
+#+RESULTS:
+[[file:demo-line600.pdf]]
+
+* gnuplotlib
+The structure of the arguments is
+
+#+BEGIN_EXAMPLE
 gp.plot( dataset, dataset, dataset, ... kwarg_options )
+#+END_EXAMPLE
 
 Each dataset is a tuple. If we have just one dataset, we can inline it, which we
 did above. A more explicit call would be
 
+#+begin_example
 gp.plot( (x,), wait=True)
+#+end_example
 
 And I can add more datasets by adding more tuples:
 
+#+begin_example
 gp.plot( (x,),
          (15. * np.sin(x/5.),),
          wait=True)
+#+end_example
 
 plot options (applying to the whole plot) go into the kwargs:
 
+#+begin_example
 gp.plot( (x,),
          (15. * np.sin(x/5.),),
          unset='grid',
          title='Sample',
          xlabel='X',
          wait=True)
+#+end_example
 
 Dataset options go into a dict at the end of each tuple
 
+#+begin_example
 gp.plot( (x, dict(_with = 'lines')),
          (15. * np.sin(x/5.), dict(_with = 'points pt 7 ps 2')),
          unset='grid',
          title='Sample',
          xlabel='X',
          wait=True)
+#+end_example
+
+* the rest                                                         :noexport:
 
 Dataset options can go into the outer kwargs, to serve as the defaults for each
 dataset:
 
+#+begin_example
 gp.plot( (x, dict(_with = 'lines')),
          (15. * np.sin(x/5.),),
          unset='grid',
@@ -513,18 +668,22 @@ gp.plot( (x, dict(_with = 'lines')),
          xlabel='X',
          _with = 'points pt 7 ps 2',
          wait=True)
+#+end_example
 
 If we have just one dataset, everything can be collapsed
 
+#+begin_example
 gp.plot( x,
          unset='grid',
          title='Sample',
          xlabel='X',
          _with = 'lines',
          wait=True)
+#+end_example
 
 Or we can use broadcasting and put all the datasets into the same set of arrays:
 
+#+begin_example
 gp.plot( nps.cat(x,
                  15. * np.sin(x/5.)),
          unset='grid',
@@ -533,6 +692,7 @@ gp.plot( nps.cat(x,
          _with = np.array( ('points pt 7 ps 2',
                             'lines')),
          wait=True)
+#+end_example
 
 Note that the options broadcast too. Here with put the _with specification into
 an array to use a different styling to the two datasets.
@@ -546,6 +706,7 @@ Useful for height maps.
 
 Let's do something fancier:
 
+#+begin_example
 gp.plot( (40 + 15.*np.sin(x/5.), x, dict(_with = 'lines'),),
          (15. * np.sin(x/5.), x*x, dict(_with = 'points pt 7 ps 2 palette',
                                         tuplesize = 3)),
@@ -554,6 +715,7 @@ gp.plot( (40 + 15.*np.sin(x/5.), x, dict(_with = 'lines'),),
          xlabel='X',
          square = True,
          wait=True)
+#+end_example
 
 Apriltag demo
 
@@ -626,5 +788,16 @@ tie into feedgnuplot somehow
 
 
 * emacs notes                                                      :noexport:
-(require 'ox-beamer)
 apt install texlive-{latex-recommended,latex-extra,pictures}
+
+* init                                                             :noexport:
+Local Variables:
+eval: (progn
+          (require 'ox-beamer)
+          (setq org-confirm-babel-evaluate nil)
+          (org-babel-do-load-languages
+           'org-babel-load-languages
+            '((python  . t)))
+          (local-set-key (kbd "<f12>") (lambda () (interactive) (insert (format "\"demo-line%d.svg\"" (line-number-at-pos)))))
+          (auto-fill-mode))
+End:

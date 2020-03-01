@@ -443,8 +443,9 @@ The values in the output are =inner([0,1,2,3], [0,1,2,3])= and
 =inner([4,5,6,7],[4,5,6,7])= and so on.
 
 * What about the stock broadcasting support?
-- What stock broadcasting support?
-- More or less, there isn't any
+What stock broadcasting support?
+- It's sparse and incomplete
+- Little end-user awareness that it exists
 
 * Broadcasting rules
 In short:
@@ -480,7 +481,7 @@ def inner(a,b):
   awareness to this function
 - The decorator is told that there are 2 inputs, that have dimensions =('n',)=
   each. It's the same =n= for both of them, so ...
-- ... the internal =nps.broadcast_define()= machinery will make sure that the
+- the internal =nps.broadcast_define()= machinery will make sure that the
   /last/ dimension of both inputs matches
 - If we call =inner()= with more than 1-dimensional input, we'll get multiple
   inner products computed, and an array of output returned
@@ -530,9 +531,15 @@ of each output slice.
   written in Python and wraps Python code. With lots of iterations this is
   /slow/.
 
-- A much faster analogue exists in C: =nps.numpysane_pywrap=. The iteration code
-  and the code for the inner function are all in C, so this is fast. Please see
-  the documentation for more detail.
+- A much faster analogue exists in C: =nps.numpysane_pywrap()=. The iteration
+  code and the code for the inner function are all in C, so this is fast. Please
+  see the documentation for more detail.
+
+- A stock nump broadcasting-in-C API exists:
+
+  https://docs.scipy.org/doc/numpy-1.13.0/reference/c-api.generalized-ufuncs.html
+
+  I found this after implementing my own, and have not tried it.
 
 * Plotting
 Let's switch gears, and talk about plotting.
@@ -798,6 +805,5 @@ eval: (progn
           (org-babel-do-load-languages
            'org-babel-load-languages
             '((python  . t)))
-          (local-set-key (kbd "<f12>") (lambda () (interactive) (insert (format "\"demo-line%d.svg\"" (line-number-at-pos)))))
           (auto-fill-mode))
 End:

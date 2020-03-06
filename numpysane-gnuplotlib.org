@@ -12,12 +12,12 @@ Two libraries to make working in numpy nicer.
 - Python2 and Python3 both supported
 
 ** numpysane (https://github.com/dkogan/numpysane)
-- Nicer array manipulation
-- Nicer basic linear algebra routines
-- Broadcasting support
+- Provides some routines to improve core functionality
+- These are new functions, so there're no compatibility concerns
 
 ** gnuplotlib (https://github.com/dkogan/gnuplotlib)
 - Plotting
+- Does a similar thing as =matplotlib= but (I claim) better
 
 ** notes                                                           :noexport:
 
@@ -34,14 +34,14 @@ Two libraries to make working in numpy nicer.
   the APIs, and then show some demos.
 
 * What's wrong with numpy?
-- Some very core functionality is mysterious and unintuitive.
-- Things work as expected /only/ with 2-dimensional arrays, no more and no less.
+- Some core functionality is mysterious and unintuitive
+- Things work as expected /only/ with 2-dimensional arrays, no more and no less
 
 Areas addressed by =numpysane=:
 
 - Nicer array manipulation
 - Nicer basic linear algebra routines
-- Broadcasting support
+- Better broadcasting support
 
 ** notes                                                           :noexport:
 
@@ -59,9 +59,11 @@ I'll briefly describe the issues and solutions. More is available in the
 documentation
 
 * Matrix concatenation
-Very easy example: stick two identical 2D arrays together
+Basic example: stick two identical 2D arrays together to extend each row
 
-- The docs say to use =hstack()= or =vstack()= or =dstack()=
+- The docs say to use =hstack()=
+
+Let's try it:
 
 #+BEGIN_EXAMPLE
 >>> import numpy as np
@@ -95,6 +97,8 @@ or
  [4 5]]
 #+END_EXAMPLE
 
+?
+
 ** notes                                                           :noexport:
 These are "horizontal" and "vertical" and "depth". I'd argue that if you have
 N-dimensional arrays, these words have limited meaning, but that's what numpy
@@ -125,7 +129,7 @@ Fine. Here's what it does if you feed it what it wants:
  [4 5 4 5]]
 #+END_EXAMPLE
 
-Whew. That makes sense! Looks "horizontal".
+That makes sense! Looks "horizontal".
 
 * Matrix concatenation
 What if I don't feed it strictly 2D matrices?
@@ -214,14 +218,15 @@ ValueError: all the input arrays must have ...
     ... same number of dimensions
 #+END_EXAMPLE
 
-Looks like the easy 1D cases work reasonably well, but it can't
+- Do the stacking functions want the dimension counts to match up, or something?
+
+Well, no:
 
 #+BEGIN_EXAMPLE
-hstack([[0 1 2]],   [0 1 2])
+>>> np.vstack((arr13,arr3))
+[[0 1 2]
+ [0 1 2]]
 #+END_EXAMPLE
-
-I claim it /should/ be able to do this, and will justify it later. And other
-functions such as =vstack()= do accept arrays with uneven input dimensions.
 
 * Matrix concatenation
 So what's wrong?
@@ -229,12 +234,14 @@ So what's wrong?
 - *numpy is inconsistent about which is the most significant dimension in an
   array*
 
-- There's an arbitrary design choice that must be made: if I stack =N= arrays of
-  shape =(A,B,C)= into a new array, do I get an array of shape =(N,A,B,C)= or
-  =(A,B,C,N)=?
+There's an arbitrary design choice that must be made: if I stack =N= arrays of
+shape =(A,B,C)= into a new array, do I get
 
-- Most of numpy makes the /first/ choice, but some of it (concatenation
-  functions most notably) makes the second choice
+- an array of shape =(N,A,B,C)= or
+- an array of shape =(A,B,C,N)=?
+
+Most of numpy makes the /first/ choice, but some of it (concatenation functions
+most notably) makes the second choice
 
 * Dimensionality example
 Example:
@@ -530,7 +537,7 @@ of each output slice.
   code and the code for the inner function are all in C, so this is fast. Please
   see the documentation for more detail.
 
-- A stock nump broadcasting-in-C API exists:
+- A stock numpy broadcasting-in-C API exists:
 
   https://docs.scipy.org/doc/numpy-1.13.0/reference/c-api.generalized-ufuncs.html
 

@@ -43,6 +43,8 @@ Areas addressed by =numpysane=:
 - Nicer basic linear algebra routines
 - Better broadcasting support
 
+Mostly stolen from the PDL project
+
 ** notes                                                           :noexport:
 
 I used perl and PDL (http://pdl.perl.org/) for many years. Solid core. Not very
@@ -237,8 +239,8 @@ So what's wrong?
 There's an arbitrary design choice that must be made: if I stack =N= arrays of
 shape =(A,B,C)= into a new array, do I get
 
-- an array of shape =(N,A,B,C)= or
-- an array of shape =(A,B,C,N)=?
+1. an array of shape =(N,A,B,C)= or
+2. an array of shape =(A,B,C,N)=?
 
 Most of numpy makes the /first/ choice, but some of it (concatenation functions
 most notably) makes the second choice
@@ -250,65 +252,94 @@ Example:
   measurements at different locations:
 
 #+BEGIN_EXAMPLE
->>> print(temperatures)
-[ t_place0 t_place1 t_place2 ... ]
+>>> print(T1)
+[ t_where0 t_where1 t_where2 ... ]
 
->>> print(temperatures.shape)
+>>> print(T1.shape)
 (Nlocations,)
 
 #+END_EXAMPLE
 
-To access temperatures at different locations in this array, I look along the
-first dimension (=axis = 0=). This is a 1-dimensional array, so that's also the
-last dimension (=axis = -1=).
+We have one dimension, so the locations are indexed by =axis = 0= and =axis =
+-1=. These are the same axis.
 
 * Dimensionality example
-Let's now say I have measured all the temperatures multiple times throughout the
-day, and I make a joint array using the /first/ convention above
+Now, let's say I measured all the temperatures multiple times throughout the
+day, and I record the measurements into a joint array =T2=.
+
+I have a choice:
+
+#+begin_example
+>>> print(T2.shape)
+(Ntimes,Nlocations)
+#+end_example
+
+or
+
+#+begin_example
+>>> print(T2.shape)
+(Nlocations,Ntimes)
+#+end_example
+
+?
+
+* Dimensionality example
+When I extend =T1= into =T2= I want consistent printing:
+
+/The dimensions printed horizontally and vertically should not change/
+
+I.e. I want this:
 
 #+BEGIN_EXAMPLE
->>> print(temperatures)
-[[ t_time0place0 t_time0place1 t_time0place2 ... ]
- [ t_time1place0 t_time1place1 t_time1place2 ... ]
+>>> print(T2)
+[[ t_when0where0 t_when0where1 t_when0where2 ... ]
+ [ t_when1where0 t_when1where1 t_when1where2 ... ]
  ...]
 
->>> print(temperatures.shape)
+>>> print(T2.shape)
 (Ntimes, Nlocations)
 #+END_EXAMPLE
 
-- I want to use the same axis index to access different locations
-- If I count dimensions from the end, I can do that: =axis = -1= refers to the
-  different locations in both cases
-- But if I count dimensions from the front, this doesn't work: locations /were/
-  at =axis = 0= but now they're at =axis = 1=
-
-** notes                                                           :noexport:
-Now let's say I have measured the temperatures multiple times throughout the
-day, and I make a joint array using the first convention above
-
-To access the temperatures at different locations in /this/ array I'd like to be
-able to use the same axis index. If I count dimensions from the end, I can do
-this: =axis = -1= refers to the different locations here and before.
-
-But if I count dimensions from the front, this doesn't work: locations /were/ at
-=axis = 0= but now they're at =axis = 1=.
+This way each horizontal row describes /one/ point in time and /multiple/
+locations, just like when printing =T1=
 
 * Dimensionality example
-If I used the /second/ convention above to produce an array of shape
-=(Nlocations, Ntimes)= then the locations are at =axis = 0= in both cases. /But/
-the arrays would be printed differently:
+When I extend =T1= into =T2= I want consistent indexing:
 
-- the location axis would be printed horizontally in the 1D array, and
-  vertically in the 2D array
+/The axis index corresponding to locations should not change/
 
-So:
+- For =T1=, locations are in =axis = 0= and =axis = -1= (same axis)
+- For =T2=, locations are in =axis = 1= and =axis = -1= (same axis)
 
-- numpy printing effectively counts dimensions from the back
-- =hstack()= counts dimensions from the front. It /should be/ concatenating
-  along =axis = -1= (the last one)
-- But instead in concatenates along =axis = 1= (the 2nd one) with special-case
-  rules about what to do with 1-dimensional arrays that don't have a 2nd axis
-- For 2D arrays the 2nd axis /is/ the last axis, but for 3D arrays it isn't
+So counting /from the back/ gives me consistency, and I want to always use =axis
+= -1=
+
+Thus I want
+
+- The /first/ concatenation option: stacking =N= arrays of shape =(A,B,C)=
+  produces an array of shape =(N,A,B,C)=
+- All axes to be indexed from the end. Always.
+
+* Dimensionality example
+If we really wanted to index the axes from the front while remaining
+self-consistent, numpy could do what PDL does:
+
+- the horizontally-printed dimension is the /first/ dimension
+- =N= arrays of shape =(A,B,C)= produce an array of shape =(A,B,C,N)=
+
+But then a core convention of linear algebra would be violated: a matrix of =N=
+rows and =M= columns would have shape =(M,N)=. Can't please everybody.
+
+* Matrix concatenation: conclusion
+So why are =hstack()= and friends weird?
+
+- Because =hstack()= tries to concatenate along =axis = 1=, while it should use
+  =axis = -1=
+- This works for 2D arrays (and 1D arrays because of special-case logic in
+  =hstack()=), but not for others
+
+Many other core functions in numpy have this issue, and routines in =numpysane=
+do this in a consistent and predictable way.
 
 ** notes                                                           :noexport:
 I can keep pointing out issues in these functions for a long time, but that's
@@ -372,7 +403,8 @@ The funny business extends to other core areas of numpy. For instance
 multiplying matrices is non-trivial
 
 - Up until numpy 1.10.0 =np.dot()= was the function for that, and it is
-  surprising in all sorts of ways
+  surprising in all sorts of ways (which should be expected since a "dot
+  product" is not the same thing as "matrix multiplication")
 - In 1.10.0 we got =np.matmul=, which is /much/ better, but even then it has
   strange corners. Trying to compute an outer product:
 
@@ -408,14 +440,17 @@ What is broadcasting?
   are automatically used for vectorization
 
 * Broadcasting: an example
-This is best described with an example: a broadcasting-aware innner product. An
+This is best described with an example: a broadcasting-aware inner product. An
 inner product (also known as a dot product) is a function that
 
 - takes in two identically-sized 1-dimensional arrays
 - outputs a scalar
 
-If one calls a broadcasting-aware inner product with two arrays of shape (2,3,4)
-as input, it would
+=inner( [ 1 2 3 4], [1 2 3 4] )= \rightarrow =30=
+
+* Broadcasting: an example
+If one calls a broadcasting-aware inner product (such as =nps.inner()=) with two
+arrays of shape (2,3,4) as input, it would
 
 - compute 6 inner products of length-4 each
 - report the output in an array of shape (2,3)
@@ -444,11 +479,6 @@ it can figure out how to parse the input arrays
 The values in the output are =inner([0,1,2,3], [0,1,2,3])= and
 =inner([4,5,6,7],[4,5,6,7])= and so on.
 
-* What about the stock broadcasting support?
-What stock broadcasting support?
-- It's sparse and incomplete
-- Little end-user awareness that it exists
-
 * Broadcasting rules
 In short:
 
@@ -461,6 +491,35 @@ In short:
   - be missing (thus assumed to equal 1)
   - equal to some positive integer >1, consistent across all arguments
 - The leading dimensions of the inputs determine the shape of the output
+
+* Broadcasting: more involved example
+Let's say we have a function with
+
+- input prototype =( (3,), ('n',3), ('n',), ('m',) )=
+- output prototype =('n','m')=
+
+Given inputs of shape
+
+#+BEGIN_EXAMPLE
+  (1,5,    3)
+  (2,1,  8,3)
+  (        8)
+  (  5,    9)
+#+END_EXAMPLE
+
+the broadcasting logic will set =n = 8= and =m = 9=.
+
+The call will then return an output array of shape =(2,5,8,9)=
+
+* OK, so what about broadcasting?
+In stock numpy, broadcasting is documented, but
+- it is sparse and incomplete
+- little end-user awareness that it exists
+
+=numpysane= provides routines to add broadcasting awareness
+
+- to any python function (via a decorator)
+- to any C function (via generated C code that produces an extension module)
 
 * Broadcasting: an example
 Let's write a broadcasting-aware inner product.
@@ -476,17 +535,17 @@ def inner(a,b):
 #+END_EXAMPLE
 
 * Broadcasting: an example
-- We wrote a function =inner(a,b)= that computes /one/ inner product. It knows
+- We had a function =inner(a,b)= that computes /one/ inner product. It knows
   nothing about vectorization
-- And it can assume that =a= and =b= are 1-dimensional arrays of the same length
-- Then we used the =nps.broadcast_define()= decorator to add broadcasting
-  awareness to this function
-- The decorator is told that there are 2 inputs, that have dimensions =('n',)=
-  each. It's the same =n= for both of them, so ...
-- the internal =nps.broadcast_define()= machinery will make sure that the
-  /last/ dimension of both inputs matches
-- If we call =inner()= with more than 1-dimensional input, we'll get multiple
-  inner products computed, and an array of output returned
+- And it assumes that =a= and =b= are 1-dimensional arrays of the same length
+- Then we applised the =nps.broadcast_define()= decorator to add broadcasting
+  awareness
+- The decorator is told about the number of input and outputs and all of their
+  expected dimensions
+- The internal =nps.broadcast_define()= machinery ensures that the dimensions of
+  the given inputs and outputs match. If not, it raises an exception
+- If we call =inner()= with higher-dimensional input, we'll get multiple inner
+  products computed, and an array of output returned
 
 * Broadcasting: an example
 So we can give it two arrays, and get inner products of each corresponding row:
@@ -498,8 +557,7 @@ So we can give it two arrays, and get inner products of each corresponding row:
 (2,3)
 #+END_EXAMPLE
 
-Or we can compute the inner product or each row of one array to some arbitrary
-vector
+Or we can compute the inner product of some arbitrary vector and each row of one array:
 
 #+BEGIN_EXAMPLE
 >>> a234 = np.arange(2*3*4).reshape(2,3,4)
@@ -508,25 +566,6 @@ vector
 >>> print(inner(a234,a4).shape)
 (2,3)
 #+END_EXAMPLE
-
-* Broadcasting: more involved example
-Let's say we have a function with input prototype
-
-- =( (3,), ('n',3), ('n',), ('m',) )=
-
-given inputs of shape
-
-#+BEGIN_EXAMPLE
-  (1,5,    3)
-  (2,1,  8,3)
-  (        8)
-  (  5,    9)
-#+END_EXAMPLE
-
-The broadcasting logic will set =n = 8= and =m = 9=.
-
-The call will return an output array of shape (2,5, ...), where ... is the shape
-of each output slice.
 
 * Broadcasting: summary
 - This is a very powerful technique. The =nps.broadcast_define()= decorator is
@@ -550,7 +589,7 @@ Let's switch gears, and talk about plotting.
 - I'm not aware of any /major/ issues: if it's not pissing you off right now,
   there probably isn't a lot of reason to switch to my library
 
-However, numpy ...
+However, matplotlib ...
 
 - is python-specific
 - is slow

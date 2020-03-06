@@ -605,11 +605,11 @@ whole lotta stuff that I don't like, so I decided to fix that too.
 =gnuplotlib=: a plotting library for numpy
 
 - Uses =gnuplot= as the plotting backend, so
-  - The plots look and interact like =gnuplot= plots have for decades
+  - The plots look and feel like =gnuplot= plots have for decades
   - It's fast
   - Lots of features and backends available
 
-- Has a (claimed) reasonable API
+- Has a reasonable API (I claim)
 - A direct port of =PDL::Graphics::Gnuplot=
 
 ** notes                                                           :noexport:
@@ -624,15 +624,12 @@ I'm sure matplotlib is more powerful than gnuplot in some ways, but when they
 rewrote that particular world, they missed lots of nice things.
 
 * Plotting: gnuplotlib design choices
-- One =plot()= function does everything
-  - Can still build up the plot components programmatically with python
-- =gnuplotlib= is a thin shim: strings are passed to =gnuplot= verbatim (like in
-  =feedgnuplot=)
-  - So we get a powerful library and a friendly learning curve
+One =plot()= function does everything
+- Can still build up the plot components programmatically: using python
 
-Introductory tutorial is available at
-
-https://github.com/dkogan/gnuplotlib/blob/master/guide/guide.org
+=gnuplotlib= is a thin shim
+- strings are passed to =gnuplot= verbatim (like in =feedgnuplot=)
+- so we get a powerful library and a friendly learning curve
 
 ** notes                                                           :noexport:
 Similar design choices as with feedgnuplot: the sysmtem is as hands-off as
@@ -671,7 +668,7 @@ gp.plot(np.sin(th))
 - We gave it just 1 array, so integers 0,1,2,... were used for the x
 
 * Plotting: gnuplotlib: a /very/ brief tutorial
-- We can pass in 2 arrays to make a scatter x-y plot:
+- We can pass in 2 arrays to make an x-y plot:
 
 #+BEGIN_SRC python :python python3 :results file link :session gnuplotlib-talk :exports both
 th = np.linspace(-np.pi, np.pi, 100)
@@ -840,7 +837,7 @@ gp.plot3d( np.cos(th) * nps.transpose(np.array((1,-1))),
 
 * Plotting: gnuplotlib
 
-More or less that's it. Lots of examples in the guide:
+That's it for the overview. Lots of examples in the guide:
 - https://github.com/dkogan/gnuplotlib/blob/master/guide/guide.org
 
 The API docs are on the main page:

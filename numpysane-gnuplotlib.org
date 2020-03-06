@@ -858,6 +858,18 @@ Or you can
 apt install python3-numpysane python3-gnuplotlib
 #+end_example
 
+
+* build notes                                                      :noexport:
+To build the talk need to install these packages:
+
+  apt install texlive-{latex-recommended,latex-extra,pictures}
+
+The local variables eval below sets everything up to generate plots from the
+script snippets. There're some minor issues:
+
+- The (progn) form is too large, or something, so it's not evaluated when the
+  buffer is loaded, even though it should be. This worked ok before.
+
 * init                                                             :noexport:
 Local Variables:
 eval: (progn

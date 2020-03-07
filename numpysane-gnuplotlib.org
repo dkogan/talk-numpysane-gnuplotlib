@@ -762,26 +762,7 @@ gp.plot( th,
   =gnuplotlib= knows to use each one for the two datasets
 
 * Plotting: gnuplotlib: a /very/ brief tutorial
-
-- What does this do?
-
-#+BEGIN_SRC python :results none exports code
-th    = np.linspace(0, 6*np.pi, 200)
-z     = np.linspace(0, 5,       200)
-size  = 0.5 + np.abs(np.cos(th))
-color = np.sin(2*th)
-
-gp.plot3d( np.cos(th) * nps.transpose(np.array((1,-1))),
-           np.sin(th) * nps.transpose(np.array((1,-1))),
-           z,
-           size,
-           color,
-           tuplesize = 5,
-           _with = 'points ps variable pt 7 palette',
-           squarexy = True)
-#+END_SRC
-
-* Plotting: gnuplotlib: a /very/ brief tutorial
+Let's make this plot:
 
 #+BEGIN_SRC python :python python3 :results file link :session gnuplotlib-talk :exports results :height 9
 th    = np.linspace(0, 6*np.pi, 200)
@@ -799,9 +780,27 @@ gp.plot3d( np.cos(th) * nps.transpose(np.array((1,-1))),
            squarexy = True)
 #+END_SRC
 
+* Plotting: gnuplotlib: a /very/ brief tutorial
+
+#+BEGIN_SRC python :results none exports code
+th    = np.linspace(0, 6*np.pi, 200)
+z     = np.linspace(0, 5,       200)
+size  = 0.5 + np.abs(np.cos(th))
+color = np.sin(2*th)
+
+gp.plot3d( np.cos(th) * nps.transpose(np.array((1,-1))),
+           np.sin(th) * nps.transpose(np.array((1,-1))),
+           z,
+           size,
+           color,
+           tuplesize = 5,
+           _with = 'points ps variable pt 7 palette',
+           squarexy = True)
+#+END_SRC
+
 * Plotting: gnuplotlib
 
-That's it for the overview. Lots of examples in the guide:
+That's it for the syntax. Lots of examples in the guide:
 - https://github.com/dkogan/gnuplotlib/blob/master/guide/guide.org
 
 The API docs are on the main page:

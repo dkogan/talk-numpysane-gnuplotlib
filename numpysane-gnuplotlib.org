@@ -21,17 +21,22 @@ Two libraries to make working in numpy nicer.
 
 ** notes                                                           :noexport:
 
+I work in a robotics lab, and end up using numpy quite a bit for computational
+work. The numpy ecosystem is widely used, but it has some really annoying
+shortcomings. And after using the system for a bit, I got really annoyed, and
+fixed the worst offenders. Now using the system is pleasant.
+
+My use cases and the things that annoy me aren't that unique to me specifically,
+so I'd like to talk about the libraries I wrote to ease my pains.
+
 - Slides linked at the above URLs
-- Talk about some tools I wrote to solve my problems. The things I work on
-  aren't that different from the things many other people work on, so sharing
-  could be useful
 
 - Have been out for a while, but I haven't done much proselytizing until now.
 
 - I use these all the time for all sorts of things
 
-- There's plenty of documentation online, so I'll give a very quick overview of
-  the APIs, and then show some demos.
+- There's plenty of documentation online, so I'm not going to go into great
+  depth. Instead this is meant as a high-level overview
 
 * What's wrong with numpy?
 - Some core functionality is mysterious and unintuitive

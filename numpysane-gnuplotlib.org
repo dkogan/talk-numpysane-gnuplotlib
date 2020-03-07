@@ -22,16 +22,16 @@ Two libraries to make working in numpy nicer.
 ** notes                                                           :noexport:
 
 I work in a robotics lab, and end up using numpy quite a bit for computational
-work. The numpy ecosystem is widely used, but it has some really annoying
-shortcomings. And after using the system for a bit, I got really annoyed, and
+work.
+
+The numpy ecosystem is widely used, but it has some really annoying
+quirks. And after using the system for a bit, I got really annoyed, and
 fixed the worst offenders. Now using the system is pleasant.
 
 My use cases and the things that annoy me aren't that unique to me specifically,
 so I'd like to talk about the libraries I wrote to ease my pains.
 
 - Slides linked at the above URLs
-
-- Have been out for a while, but I haven't done much proselytizing until now.
 
 - I use these all the time for all sorts of things
 
@@ -51,21 +51,13 @@ Areas addressed by =numpysane=:
 Mostly stolen from the PDL project
 
 ** notes                                                           :noexport:
+Before python and numpy, and was a heavy user of perl and PDL, a numerical
+computation library for perl
 
-I used perl and PDL (http://pdl.perl.org/) for many years. Solid core. Not very
-widely used. Not a lot of library support.
+complementary issues
 
-Eventually I moved to python and numpy to discover that both aren't nearly as
-nice as they were made out to be. numpy's issues are complementary to PDL: it
-has lots of users and lots of libraries, but the core functionality isn't great.
-
-Many of the issues stem from a fundamental design assumption that everybody has
-only has 2-dimensional arrays.
-
-I'll briefly describe the issues and solutions. More is available in the
-documentation
-
-* Matrix concatenation
+so much of these libraries is a port of PDL functions to numpy
+* Matrix concatenation                                   :noexport:
 Basic example: stick two identical 2D arrays together to extend each row
 
 - The docs say to use =hstack()=
@@ -568,7 +560,6 @@ However, matplotlib ...
 - is python-specific
 - is slow
 - has a weird API
-- is missing useful interactivity
 
 * Plotting: gnuplotlib
 =gnuplotlib=: a plotting library for numpy

@@ -402,8 +402,8 @@ Nothing is "horizontal" or "vertical". axes should be given from the end
 The funny business extends to other core areas of numpy. For instance
 multiplying matrices is non-trivial
 
-- Up until numpy 1.10.0 =np.dot()= was the function for that, and it is
-  surprising in all sorts of ways (which should be expected since a "dot
+- Up until numpy 1.10.0 (2015-2016) =np.dot()= was the function for that, and it
+  is surprising in all sorts of ways (which should be expected since a "dot
   product" is not the same thing as "matrix multiplication")
 - In 1.10.0 we got =np.matmul=, which is /much/ better, but even then it has
   strange corners. Trying to compute an outer product:
@@ -455,10 +455,9 @@ arrays of shape (2,3,4) as input, it would
 - compute 6 inner products of length-4 each
 - report the output in an array of shape (2,3)
 
-Because =nps.inner()= knows the dimensionality of its inputs and of its outputs,
-it can figure out how to parse the input arrays
-
 * Broadcasting: an example
+Let
+
 #+BEGIN_EXAMPLE
 >>> a234 = np.arange(2*3*4).reshape(2,3,4)
 
@@ -471,45 +470,61 @@ it can figure out how to parse the input arrays
   [16 17 18 19]
   [20 21 22 23]]]
 
+>>> a4 = np.arange(4)
+
+>>> print(a4)
+[0 1 2 3]
+#+END_EXAMPLE
+
+* Broadcasting: an example
+So we can give it two =(2,3,4)= arrays, and get inner products of each
+corresponding row:
+
+#+BEGIN_EXAMPLE
 >>> print(nps.inner(a234,a234))
 [[  14  126  366]
  [ 734 1230 1854]]
 #+END_EXAMPLE
 
-The values in the output are =inner([0,1,2,3], [0,1,2,3])= and
-=inner([4,5,6,7],[4,5,6,7])= and so on.
-
-* Broadcasting rules
-In short:
-
-- Line up the shapes of the inputs to their /trailing/ dimensions
-- Match the trailing dimensions with the expected shapes of the inputs
-- Any leading dimensions left over are used for vectorization
-- The extra leading dimensions must be compatible across all the inputs. This
-  means that each leading dimension must either
-  - equal 1
-  - be missing (thus assumed to equal 1)
-  - equal to some positive integer >1, consistent across all arguments
-- The leading dimensions of the inputs determine the shape of the output
-
-* Broadcasting: more involved example
-Let's say we have a function with
-
-- input prototype =( (3,), ('n',3), ('n',), ('m',) )=
-- output prototype =('n','m')=
-
-Given inputs of shape
+The values in the output are
 
 #+BEGIN_EXAMPLE
-  (1,5,    3)
-  (2,1,  8,3)
-  (        8)
-  (  5,    9)
+[[ inner([0,1,2,3],     [0,1,2,3]),        ..... ]
+ [ inner([12,13,14,15], [12,13,14,15]),    ..... ]]
 #+END_EXAMPLE
 
-the broadcasting logic will set =n = 8= and =m = 9=.
+and so on
 
-The call will then return an output array of shape =(2,5,8,9)=
+* Broadcasting: an example
+Or we can given it one =(2,3,4)= array and a =(4,)= array to compute the inner
+product of every row in the larger array with the one =(4,)= array:
+
+#+BEGIN_EXAMPLE
+>>> print(nps.inner(a234,a4))
+[[ 14  38  62]
+ [ 86 110 134]]
+#+END_EXAMPLE
+
+The values in the output are
+
+#+BEGIN_EXAMPLE
+[[ inner([0,1,2,3],     [0,1,2,3]),    ..... ]
+ [ inner([12,13,14,15], [0,1,2,3]),    ..... ]]
+#+END_EXAMPLE
+
+and so on
+
+* Broadcasting rules
+1. Line up the shapes of the inputs to their /trailing/ dimensions
+2. Match the trailing dimensions with the expected shapes of the inputs. If
+   anything doesn't match, throw an exception
+3. The extra leading dimensions must be compatible across all the inputs. This
+   means that each leading dimension must either
+   - equal 1
+   - be missing (thus assumed to equal 1)
+   - equal to some positive integer >1, consistent across all arguments
+4. Any extra leading dimensions are used for vectorization, and determine the
+   shape of the output
 
 * OK, so what about broadcasting?
 In stock numpy, broadcasting is documented, but
@@ -522,65 +537,19 @@ In stock numpy, broadcasting is documented, but
 - to any C function (via generated C code that produces an extension module)
 
 * Broadcasting: an example
-Let's write a broadcasting-aware inner product.
+Let's add broadcasting-awareness to an existing inner product function
 
 #+BEGIN_EXAMPLE
 import numpysane as nps
 @nps.broadcast_define( (('n',), ('n',)), () )
 def inner(a,b):
-    # We could use numpy for this: return a.dot(b)
-    sum = 0.
-    for i in range(len(a)): sum += a[i]*b[i]
-    return sum
+    ....
 #+END_EXAMPLE
 
-* Broadcasting: an example
 - We had a function =inner(a,b)= that computes /one/ inner product. It knows
   nothing about vectorization
-- And it assumes that =a= and =b= are 1-dimensional arrays of the same length
-- Then we applised the =nps.broadcast_define()= decorator to add broadcasting
-  awareness
-- The decorator is told about the number of input and outputs and all of their
-  expected dimensions
-- The internal =nps.broadcast_define()= machinery ensures that the dimensions of
-  the given inputs and outputs match. If not, it raises an exception
-- If we call =inner()= with higher-dimensional input, we'll get multiple inner
-  products computed, and an array of output returned
-
-* Broadcasting: an example
-So we can give it two arrays, and get inner products of each corresponding row:
-
-#+BEGIN_EXAMPLE
->>> a234 = np.arange(2*3*4).reshape(2,3,4)
-
->>> print(inner(a234,a234).shape)
-(2,3)
-#+END_EXAMPLE
-
-Or we can compute the inner product of some arbitrary vector and each row of one array:
-
-#+BEGIN_EXAMPLE
->>> a234 = np.arange(2*3*4).reshape(2,3,4)
->>> a4   = np.arange(4)
-
->>> print(inner(a234,a4).shape)
-(2,3)
-#+END_EXAMPLE
-
-* Broadcasting: summary
-- This is a very powerful technique. The =nps.broadcast_define()= decorator is
-  written in Python and wraps Python code. With lots of iterations this is
-  /slow/.
-
-- A much faster analogue exists in C: =nps.numpysane_pywrap()=. The iteration
-  code and the code for the inner function are all in C, so this is fast. Please
-  see the documentation for more detail.
-
-- A stock numpy broadcasting-in-C API exists:
-
-  https://docs.scipy.org/doc/numpy-1.13.0/reference/c-api.generalized-ufuncs.html
-
-  I found this after implementing my own, and have not tried it.
+- Then we applied the =nps.broadcast_define()= decorator, and we get
+  dimensionality checking and vectorization logic
 
 * Plotting: gnuplotlib
 Let's switch gears, and talk about plotting.
@@ -595,11 +564,6 @@ However, matplotlib ...
 - is slow
 - has a weird API
 - is missing useful interactivity
-
-** notes                                                           :noexport:
-At this point in my perl -> python transition I was getting peeved. I didn't see
-anything as egregiously annoying in matplotlib as in core numpy, but it does a
-whole lotta stuff that I don't like, so I decided to fix that too.
 
 * Plotting: gnuplotlib
 =gnuplotlib=: a plotting library for numpy

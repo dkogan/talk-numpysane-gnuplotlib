@@ -20,20 +20,20 @@ Two libraries to make working in numpy nicer.
 - Does a similar thing as =matplotlib= but (I claim) better
 
 ** notes                                                           :noexport:
-
 I work in a robotics lab, and end up using numpy quite a bit for computational
 work.
 
-The numpy ecosystem is widely used, but it has some really annoying
-quirks. And after using the system for a bit, I got really annoyed, and
-fixed the worst offenders. Now using the system is pleasant.
+The numpy ecosystem is widely used, but has some quirks
+
+And after using the system for a bit, I got really annoyed, and fixed the worst
+offenders. Now using the system is pleasant.
 
 My use cases and the things that annoy me aren't that unique to me specifically,
 so I'd like to talk about the libraries I wrote to ease my pains.
 
-- Slides linked at the above URLs
+- Sources and full documentation is at the above URLs
 
-- I use these all the time for all sorts of things
+- These slides linked at the above URLs
 
 - There's plenty of documentation online, so I'm not going to go into great
   depth. Instead this is meant as a high-level overview
@@ -57,7 +57,7 @@ computation library for perl
 complementary issues
 
 so much of these libraries is a port of PDL functions to numpy
-* Matrix concatenation                                   :noexport:
+* Matrix concatenation
 Basic example: stick two identical 2D arrays together to extend each row
 
 - The docs say to use =hstack()=
@@ -97,12 +97,6 @@ or
 #+END_EXAMPLE
 
 ?
-
-** notes                                                           :noexport:
-These are "horizontal" and "vertical" and "depth". I'd argue that if you have
-N-dimensional arrays, these words have limited meaning, but that's what numpy
-does. And what if you want the 4th dimension? I'm convinced that nobody knows
-how to use these functions. Let's try
 
 * Matrix concatenation
 This was a trick question. Here's what it does:
@@ -338,16 +332,6 @@ So why are =hstack()= and friends weird?
 Many other core functions in numpy have this issue, and routines in =numpysane=
 do this in a consistent and predictable way.
 
-** notes                                                           :noexport:
-I can keep pointing out issues in these functions for a long time, but that's
-not useful: they're all broken.
-
-Fundamental issue: an inconsistent dimensionality convention.
-
-The way arrays are printed, the innermost dimension is the /last/ one: the
-dimension printed horizontal is =axis = -1=. So axes should be counted from the
-end. But the numpy functions for concatenation count them from the front.
-
 * Matrix concatenation with numpysane
 There are two functions, both stolen from the PDL project.
 
@@ -357,10 +341,6 @@ There are two functions, both stolen from the PDL project.
 These both add leading length-1 dimensions to the input as needed: "something"
 is logically equivalent to "1 of something". This is one of the /broadcasting/
 rules I'll get to in a bit
-
-** notes                                                           :noexport:
-Nothing is "horizontal" or "vertical". axes should be given from the end
-(axis<0). Some functions actually require this: glue(axis>=0) will barf
 
 * Matrix concatenation with numpysane
 =nps.glue()= works as expected:
@@ -561,6 +541,27 @@ However, matplotlib ...
 - is slow
 - has a weird API
 
+** notes                                                           :noexport:
+I make a lot of plots in my day to day, outside of python most of the time
+
+My plots are generally made by gnuplot, an venerable plotting library. Capable.
+Fast. Lots of backends
+
+Sometimes I use gnuplot directly, but most of the time there's some other
+frontend feeding it. I want to keep my plots looking and feeling the same across
+systems.
+
+Conversely, if you really like the plots you get from matplotlib, you can't use
+them outside of that system.
+
+The world is bigger than python.
+
+
+Slow
+
+
+Weird api from matlab
+
 * Plotting: gnuplotlib
 =gnuplotlib=: a plotting library for numpy
 
@@ -571,17 +572,6 @@ However, matplotlib ...
 
 - Has a reasonable API (I claim)
 - A direct port of =PDL::Graphics::Gnuplot=
-
-** notes                                                           :noexport:
-
-I make a lot of plots in my day to day, outside of python most of the time. I'd
-like all my plots to look and feel the same. There's absolutely no reason for
-any numpy-based plotting library to actually implement their own backend. If
-their backend is amazing, then everybody else (python or not) should use it. If
-it's not amazing, they should find an amazing one, and use it.
-
-I'm sure matplotlib is more powerful than gnuplot in some ways, but when they
-rewrote that particular world, they missed lots of nice things.
 
 * Plotting: gnuplotlib design choices
 One =plot()= function does everything
@@ -676,6 +666,10 @@ gp.plot(np.cos(th), np.sin(th),
 - The =gnuplot= documentation talks in detail about what kind of input each
   style expects
 
+** notes                                                           :noexport:
+yerrorbars: (x,y,ydelta)
+            (x,y,ylow, yhigh)
+
 * Plotting: gnuplotlib: a /very/ brief tutorial
 An explicit invocation of =plot()= looks like this:
 
@@ -724,9 +718,6 @@ gp.plot( ( th, np.sin(th), ),
 - 2/3 datasets don't set their own =with=, so they use =lines=
 - 1/3 plots with =points ps 1= instead. =gnuplotlib= doesn't know what that is,
   but =gnuplot= knows that =ps= is a synonym for =pointsize=
-
-** notes                                                           :noexport:
-The arguments can be built up incrementally with python
 
 * Plotting: gnuplotlib: a /very/ brief tutorial
 - Broadcasting is fully supported:

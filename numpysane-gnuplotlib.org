@@ -818,8 +818,29 @@ script snippets. There're some minor issues:
   buffer is loaded, even though it should be. This worked ok before.
 
 * init                                                             :noexport:
-Local Variables:
-eval: (progn
+I need some advices to generate the images for the gnuplotlib slides. I need to:
+
+- Generate unique image filenames
+- Communicate those filenames to Python
+- Display code that produces an interactive plot (so that the readers can
+  cut/paste the snippets), but run code that writes to the image that ends up in
+  the pdf
+
+There're some comments below, and a mailing list post:
+
+https://lists.gnu.org/archive/html/emacs-orgmode/2020-03/msg00086.html
+
+This triggered a bug/feature in emacs where the file-local eval was too big, and
+wasn't happening automatically. Problem description:
+
+https://lists.gnu.org/archive/html/emacs-devel/2020-03/msg00314.html
+
+I'm using Stefan Monnier's suggested workaround from here:
+
+https://lists.gnu.org/archive/html/emacs-devel/2020-03/msg00320.html
+
+
+(progn ;;local-config
           (require 'ox-beamer)
           (setq org-confirm-babel-evaluate nil)
           (org-babel-do-load-languages
@@ -936,4 +957,7 @@ eval: (progn
    #'org-babel-execute:python
    :around #'dima-org-babel-python-set-demo-output))
 )
+
+Local Variables:
+eval: (progn (re-search-backward "^(progn ;;local-config") (eval (read (current-buffer))))
 End:
